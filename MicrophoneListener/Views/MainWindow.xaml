@@ -1,0 +1,30 @@
+﻿<Window
+    x:Class="MicrophoneListener.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:MicrophoneListener.ViewModels"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
+    Title="MainWindow"
+    Height="450"
+    Width="800">
+    <StackPanel
+        Orientation="Vertical">
+        <ComboBox
+            Margin="10"
+            Padding="10"
+            ItemsSource="{Binding Path=Devices}"
+            SelectedItem="{Binding Path=SelectedDevice}" />
+        <ProgressBar
+            Margin="10"
+            Padding="10"
+            Height="30"
+            Background="Red"
+            Foreground="Green"
+            Minimum="0"
+            Maximum="1"
+            Value="{Binding Path=Peak}" />
+    </StackPanel>
+</Window>
