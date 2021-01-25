@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 using JetBrains.Annotations;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
@@ -16,17 +15,13 @@ namespace MicrophoneListener.ViewModels
         private readonly SynchronizationContext synchronizationContext;
         private int bitDepth;
         private WasapiCapture capture;
-
         private int channelCount;
-
-        private string message;
         private float peak;
 
+        private double percentagePeak;
         private int sampleRate;
-
         private int sampleTypeIndex;
         private MMDevice selectedDevice;
-
         private int shareModeIndex;
         private WaveFileWriter writer;
 
@@ -38,6 +33,7 @@ namespace MicrophoneListener.ViewModels
             Devices.AddRange(enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active));
             MMDevice defaultDevice = enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
             SelectedDevice = Devices.FirstOrDefault(c => c.ID == defaultDevice.ID);
+            GetDefaultRecordingFormat(SelectedDevice);
             Record();
         }
 
@@ -46,19 +42,25 @@ namespace MicrophoneListener.ViewModels
         public MMDevice SelectedDevice
         {
             get => selectedDevice;
-            set
-            {
-                if (SetProperty(ref selectedDevice, value))
-                {
-                    GetDefaultRecordingFormat(value);
-                }
-            }
+            set => SetProperty(ref selectedDevice, value);
         }
 
         public float Peak
         {
             get => peak;
-            set => SetProperty(ref peak, value);
+            private set
+            {
+                if (SetProperty(ref peak, value * 2))
+                {
+                    PercentagePeak = peak;
+                }
+            }
+        }
+
+        public double PercentagePeak
+        {
+            get => percentagePeak;
+            set => SetProperty(ref percentagePeak, value);
         }
 
         public int SampleTypeIndex
@@ -82,24 +84,6 @@ namespace MicrophoneListener.ViewModels
             set => SetProperty(ref bitDepth, value);
         }
 
-        public int SampleRate
-        {
-            get => sampleRate;
-            set => SetProperty(ref sampleRate, value);
-        }
-
-        public int ChannelCount
-        {
-            get => channelCount;
-            set => SetProperty(ref channelCount, value);
-        }
-
-        public string Message
-        {
-            get => message;
-            set => SetProperty(ref message, value);
-        }
-
         public int ShareModeIndex
         {
             get => shareModeIndex;
@@ -109,18 +93,6 @@ namespace MicrophoneListener.ViewModels
         public void Dispose()
         {
             Stop();
-        }
-        
-        private void GetDefaultRecordingFormat(MMDevice device)
-        {
-            using (var c = new WasapiCapture(device))
-            {
-                SampleTypeIndex = c.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat ? 0 : 1;
-                SampleRate = c.WaveFormat.SampleRate;
-                BitDepth = c.WaveFormat.BitsPerSample;
-                ChannelCount = c.WaveFormat.Channels;
-                Message = "";
-            }
         }
 
         private void CaptureOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
@@ -139,39 +111,26 @@ namespace MicrophoneListener.ViewModels
         {
             writer.Dispose();
             writer = null;
-            if (e.Exception == null)
-            {
-                Message = "Recording Stopped";
-            }
-            else
-            {
-                Message = "Recording Error: " + e.Exception.Message;
-            }
-
             capture.Dispose();
             capture = null;
         }
 
         private void Record()
         {
-            try
+            capture = new WasapiCapture(SelectedDevice);
+            capture.ShareMode = ShareModeIndex == 0 ? AudioClientShareMode.Shared : AudioClientShareMode.Exclusive;
+            if (SampleTypeIndex == 0)
             {
-                capture = new WasapiCapture(SelectedDevice);
-                capture.ShareMode = ShareModeIndex == 0 ? AudioClientShareMode.Shared : AudioClientShareMode.Exclusive;
-                capture.WaveFormat =
-                    SampleTypeIndex == 0
-                        ? WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channelCount)
-                        : new WaveFormat(sampleRate, bitDepth, channelCount);
-                //RecordLevel = SelectedDevice.AudioEndpointVolume.MasterVolumeLevelScalar;
-                capture.StartRecording();
-                capture.RecordingStopped += OnRecordingStopped;
-                capture.DataAvailable += CaptureOnDataAvailable;
-                Message = "Recording...";
+                capture.WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channelCount);
             }
-            catch (Exception e)
+            else
             {
-                MessageBox.Show(e.Message);
+                capture.WaveFormat = new WaveFormat(sampleRate, bitDepth, channelCount);
             }
+
+            capture.StartRecording();
+            capture.RecordingStopped += OnRecordingStopped;
+            capture.DataAvailable += CaptureOnDataAvailable;
         }
 
         private void Stop()
@@ -181,8 +140,18 @@ namespace MicrophoneListener.ViewModels
 
         private void UpdatePeakMeter()
         {
-            // can't access this on a different thread from the one it was created on, so get back to GUI thread
             synchronizationContext.Post(s => Peak = SelectedDevice.AudioMeterInformation.MasterPeakValue, null);
+        }
+
+        private void GetDefaultRecordingFormat(MMDevice value)
+        {
+            using (var c = new WasapiCapture(value))
+            {
+                SampleTypeIndex = c.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat ? 0 : 1;
+                sampleRate = c.WaveFormat.SampleRate;
+                BitDepth = c.WaveFormat.BitsPerSample;
+                channelCount = c.WaveFormat.Channels;
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net48</TargetFramework>
         <UseWPF>true</UseWPF>
+        <ApplicationIcon>icon.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,10 +13,6 @@
       <PackageReference Include="MahApps.Metro" Version="2.4.3" />
       <PackageReference Include="NAudio" Version="1.10.0" />
       <PackageReference Include="Prism.DryIoc" Version="8.0.0.1909" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Models" />
     </ItemGroup>
 
 </Project>

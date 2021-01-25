@@ -5,26 +5,32 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:MicrophoneListener.ViewModels"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
-    Title="MainWindow"
-    Height="450"
-    Width="800">
-    <StackPanel
-        Orientation="Vertical">
-        <ComboBox
-            Margin="10"
+    ResizeMode="CanResize"
+    Topmost="True"
+    WindowStyle="None"
+    Background="Black"
+    x:Name="window"
+    WindowStartupLocation="CenterOwner"
+    MouseDown="MainWindow_OnMouseDown">
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo
+            ProgressState="Normal"
+            ProgressValue="{Binding Path=PercentagePeak, Mode=OneWay}" />
+    </Window.TaskbarItemInfo>
+
+    <Viewbox>
+        <mah:MetroProgressBar
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
             Padding="10"
-            ItemsSource="{Binding Path=Devices}"
-            SelectedItem="{Binding Path=SelectedDevice}" />
-        <ProgressBar
-            Margin="10"
-            Padding="10"
-            Height="30"
-            Background="Red"
-            Foreground="Green"
+            Width="{Binding ElementName=window, Path= ActualWidth}"
+            Height="{Binding ElementName=window, Path=ActualHeight}"
             Minimum="0"
             Maximum="1"
-            Value="{Binding Path=Peak}" />
-    </StackPanel>
+            Background="Black"
+            Value="{Binding Path=Peak, Mode=OneWay}" />
+    </Viewbox>
 </Window>
