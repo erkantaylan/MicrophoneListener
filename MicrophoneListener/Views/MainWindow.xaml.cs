@@ -14,6 +14,7 @@ namespace MicrophoneListener.Views
             Closed += OnClosed;
         }
 
+
         private void OnClosed(object sender, EventArgs e)
         {
             if (DataContext is MainWindowViewModel vm)
@@ -30,7 +31,7 @@ namespace MicrophoneListener.Views
             }
             catch
             {
-                //
+                // ignored
             }
         }
     }

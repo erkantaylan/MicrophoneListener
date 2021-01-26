@@ -1,18 +1,35 @@
 ﻿using System.Windows;
 using MicrophoneListener.Views;
 using Prism.Ioc;
+using RestoreWindowPlace;
 
 namespace MicrophoneListener
 {
     public partial class App
     {
-        protected override void RegisterTypes(IContainerRegistry containerRegistry)
+        private readonly WindowPlace windowPlace;
+
+        public App()
+        {
+            windowPlace = new WindowPlace("window.config");
+            Exit += OnExit;
+        }
+
+        private void OnExit(object sender, ExitEventArgs e)
+        {
+            windowPlace.Save();
+        }
+
+        protected override void RegisterTypes(IContainerRegistry o)
         {
         }
 
         protected override Window CreateShell()
         {
-            return Container.Resolve<MainWindow>();
+            var mainWindow = Container.Resolve<MainWindow>();
+            windowPlace.Register(mainWindow);
+            return mainWindow;
         }
+
     }
 }

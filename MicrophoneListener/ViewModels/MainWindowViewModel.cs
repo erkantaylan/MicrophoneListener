@@ -140,18 +140,16 @@ namespace MicrophoneListener.ViewModels
 
         private void UpdatePeakMeter()
         {
-            synchronizationContext.Post(s => Peak = SelectedDevice.AudioMeterInformation.MasterPeakValue, null);
+            synchronizationContext.Post(_ => Peak = SelectedDevice.AudioMeterInformation.MasterPeakValue, null);
         }
 
         private void GetDefaultRecordingFormat(MMDevice value)
         {
-            using (var c = new WasapiCapture(value))
-            {
-                SampleTypeIndex = c.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat ? 0 : 1;
-                sampleRate = c.WaveFormat.SampleRate;
-                BitDepth = c.WaveFormat.BitsPerSample;
-                channelCount = c.WaveFormat.Channels;
-            }
+            using var c = new WasapiCapture(value);
+            SampleTypeIndex = c.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat ? 0 : 1;
+            sampleRate = c.WaveFormat.SampleRate;
+            BitDepth = c.WaveFormat.BitsPerSample;
+            channelCount = c.WaveFormat.Channels;
         }
     }
 }
